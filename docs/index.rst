@@ -1,5 +1,5 @@
 Welcome to QField Layout's documentation!
-======================================
+==========================================
 
 .. toctree::
    :maxdepth: 2
