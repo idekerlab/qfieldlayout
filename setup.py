@@ -1,7 +1,8 @@
 #!/usr/bin/env python
 
 """The setup script."""
-
+import os
+import re
 from setuptools import setup, find_packages
 
 with open('README.rst') as readme_file:
@@ -9,6 +10,11 @@ with open('README.rst') as readme_file:
 
 with open('HISTORY.rst') as history_file:
     history = history_file.read()
+
+with open(os.path.join('qfieldlayout', '__init__.py')) as ver_file:
+    for line in ver_file:
+        if line.startswith('__version__'):
+            version = re.sub("'", "", line[line.index("'"):]).rstrip()
 
 requirements = ['numpy']
 
@@ -27,6 +33,7 @@ setup(
         'Programming Language :: Python :: 3.6',
         'Programming Language :: Python :: 3.7',
         'Programming Language :: Python :: 3.8',
+        'Programming Language :: Python :: 3.9'
     ],
     description="Q Field layout algorithm",
     install_requires=requirements,
@@ -39,6 +46,6 @@ setup(
     test_suite='tests',
     tests_require=test_requirements,
     url='https://github.com/idekerlab/qfieldlayout',
-    version='0.1.0',
+    version=version,
     zip_safe=False,
 )
