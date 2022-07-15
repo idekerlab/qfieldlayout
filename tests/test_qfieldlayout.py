@@ -5,7 +5,7 @@
 
 import unittest
 
-from qfieldlayout import qfieldlayout
+from qfieldlayout import layout
 
 
 class TestQfieldlayout(unittest.TestCase):
