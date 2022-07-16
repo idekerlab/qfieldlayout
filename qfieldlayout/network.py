@@ -44,7 +44,7 @@ class QFNetwork:
         return cls(edge_array, name=nicecx.get_name())
 
     def get_sorted_nodes(self, reverse=True):
-        # get the nodes as a list, sorted by degree, highest degree first
+        # get the nodes as a list, sorted by degree with the highest degree node first.
         return sorted(self.node_dict.values(), key=itemgetter('degree'), reverse=reverse)
 
     def get_nodecount(self):
