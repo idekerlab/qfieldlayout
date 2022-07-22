@@ -80,7 +80,7 @@ def add_field(source_field, target_field, x, y, remove=False, show_node_dict=Fal
 def subtract_field(source_field, target_field, x, y, show_node_dict=False):
     add_field(source_field, target_field, x, y, remove=True, show_node_dict=show_node_dict)
 
-def attraction_field(radius, scale, datatype):
+def attraction_field(radius, scale, datatype=np.int16, direction=None):
     dimension = (2 * radius) + 1
     ef = np.zeros((dimension, dimension), dtype=datatype)
     energy = int(scale * radius)
@@ -91,9 +91,26 @@ def attraction_field(radius, scale, datatype):
             dy = abs(radius - y)
             distance = sqrt(dx ** 2 + dy ** 2)
             ef[x, y] = -1 * energy if distance == 0 else min(0, int((slope * distance) - energy))
+    if direction:
+        # set the "source" half of the field to zero. energy is only lower in the "target" half
+        x_start = 0
+        y_start = 0
+        x_end = dimension
+        y_end = dimension
+        if direction == "down":
+            y_end = radius + 1
+        elif direction == "up":
+            y_start = radius + 1
+        elif direction == "right":
+            x_end = radius + 1
+        elif direction == "left":
+            x_start = radius + 1
+        for x in range(x_start, x_end):
+            for y in range(y_start, y_end):
+                ef[x,y] = 0
     return ef
 
-def repulsion_field(radius, scale, datatype, center_spike=False):
+def repulsion_field(radius, scale, datatype=np.int16, center_spike=False):
     dimension = (2 * radius) + 1
     ef = np.zeros((dimension, dimension), dtype=datatype)
     energy = int(scale * radius)

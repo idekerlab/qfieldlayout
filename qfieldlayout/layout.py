@@ -11,7 +11,21 @@ import logging
 
 logger = logging.getLogger(__name__)
 
-
+# TODO
+# add a mask parameter
+# the nodes have integer tags specifying regions
+# They are only allowed to be placed in those regions after the initial positions
+# The regions are specified as vectors of coordinates.
+# In the simple case, the regions would not overlap.
+# But maybe there is a use case for overlapping regions.
+# There will be two masks to begin with:
+# a simple geometric case for testing
+# a classic cell diagram:
+# extracellular - set the whole g-field = 0
+# cell membrane - a circle = 1
+# cytoplasm - a smaller circle = 2
+# nuclear membrane - a smaller circle = 3
+# nucleus - a smaller circle = 4
 class QFLayout:
     def __init__(self, input_network, sparsity=30, r_radius=10,
                  a_radius=10, r_scale=10, a_scale=5, center_attractor_scale=0.01,
