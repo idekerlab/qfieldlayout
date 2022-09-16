@@ -52,19 +52,27 @@ class QFNetwork:
 
     def place_nodes_randomly(self, dimension):
         # randomly place the nodes in the center of the board
-        temp_board = np.zeros((dimension, dimension))
+        for node_id, node in self.node_dict.items():
+            self.place_one_node_randomly(node)
+
+    def place_one_node_randomly(self, node, dimension):
+        # TODO error if you can't place the node
         center_left = round(dimension / 4)
         center_right = dimension - center_left
+        placed = False
+        while not placed:
+            x = randint(center_left, center_right)
+            y = randint(center_left, center_right)
+            if not self.node_at_position(x, y):
+                node["x"] = x
+                node["y"] = y
+                placed = True
+
+    def node_at_position(self, x, y):
         for node_id, node in self.node_dict.items():
-            placed = False
-            while not placed:
-                x = randint(center_left, center_right)
-                y = randint(center_left, center_right)
-                if temp_board[x, y] == 0:
-                    temp_board[x, y] = 1
-                    placed = True
-            node["x"] = x
-            node["y"] = y
+            if node.get("x") and x == node["x"] and node.get("y") and y == node["y"]:
+                return True
+        return False
 
     def place_nodes_at_center(self, center):
         for node_id, node in self.node_dict.items():
@@ -103,7 +111,7 @@ class QFNetwork:
             y_dist = y_dist + 1
         return list(zip(x_list, y_list))
 
-    def place_nodes_in_a_spiral(self, center, scale=1):
+    def place_nodes_in_a_spiral(self, center, scale=1, min_degree=2):
         # This layout ensures that no node is on top of
         # each other and that they are spaced away from
         # each other according to the scaling factor.
@@ -121,8 +129,9 @@ class QFNetwork:
             # The conjecture is that this will improve cluster
             # separation and faster convergence
             node = sorted_nodes[index]
-            node["x"] = coordinates[index][0]
-            node["y"] = coordinates[index][1]
+            if node["degree"] >= min_degree:
+                node["x"] = coordinates[index][0]
+                node["y"] = coordinates[index][1]
 
     def get_cx_layout(self, node_size=40):
         cx_layout = []
@@ -133,3 +142,11 @@ class QFNetwork:
                        "y": int(node["y"] * node_size)}
             cx_layout.append(cx_node)
         return cx_layout
+
+    def get_nx_pos(self, node_size=40):
+        pos = {}
+        for node_id, node in self.node_dict.items():
+            logger.debug('nodeid: ' + str(node_id) + ' node: ' + str(node))
+            # the y-coordinate is inverted in networkx
+            pos[int(node_id)] = [int(node["x"] * node_size), -int(node["y"] * node_size)]
+        return pos

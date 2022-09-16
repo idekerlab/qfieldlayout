@@ -29,11 +29,13 @@ logger = logging.getLogger(__name__)
 class QFLayout:
     def __init__(self, input_network, sparsity=30, r_radius=10,
                  a_radius=10, r_scale=10, a_scale=5, center_attractor_scale=0.01,
-                 initialize_coordinates="spiral", datatype=np.int16):
+                 initialize_coordinates="spiral", datatype=np.int16, verbose=False):
         self.integer_type = datatype
         self.network = input_network
 
         self.gfield, center = self._make_gfield(sparsity, center_attractor_scale)
+        if verbose:
+            print("gfield shape = ", self.gfield.shape)
         self.gfield_mask = np.zeros(self.gfield.shape, dtype=self.integer_type)
 
         if initialize_coordinates == "center":
@@ -56,8 +58,9 @@ class QFLayout:
 
         # initialize the repulsion field and the mask
         for node in self.network.get_sorted_nodes():
-            add_field(self.rfield, self.gfield, node["x"], node["y"])
-            self.gfield_mask[node["x"], node["y"]] = 1
+            if node["degree"] >= 2:
+                add_field(self.rfield, self.gfield, node["x"], node["y"])
+                self.gfield_mask[node["x"], node["y"]] = 1
 
     @classmethod
     def from_nicecx(cls, nicecx, **kwargs):
@@ -79,6 +82,8 @@ class QFLayout:
 
     # update the position of one node
     def layout_one_node(self, node):
+        if node.get("x") is None or node.get("y") is None:
+            self.network.place_one_node_randomly(node, self.gfield.shape[0])
         # remove the node from the gfield by subtracting its rfield at its current location
         subtract_field(self.rfield, self.gfield, node['x'], node['y'])
 
@@ -90,12 +95,13 @@ class QFLayout:
             # add an afield to the sfield
             # lower degree nodes have higher afields
             adj_node = self.network.node_dict[adj_node_id]
-            if degree == 1:
-                add_field(self.afield_high, self.sfield, adj_node["x"], adj_node["y"])
-            elif degree < 5:
-                add_field(self.afield_med, self.sfield, adj_node["x"], adj_node["y"])
-            else:
-                add_field(self.afield, self.sfield, adj_node["x"], adj_node["y"])
+            if adj_node.get("x") is not None and adj_node.get("y") is not None:
+                if degree == 1:
+                    add_field(self.afield_high, self.sfield, adj_node["x"], adj_node["y"])
+                elif degree < 5:
+                    add_field(self.afield_med, self.sfield, adj_node["x"], adj_node["y"])
+                else:
+                    add_field(self.afield, self.sfield, adj_node["x"], adj_node["y"])
 
         # add sfield to the gfield
         self.gfield += self.sfield
@@ -119,19 +125,22 @@ class QFLayout:
         # subtract the sfield to revert the gfield to contain only the superposition of node rfields.
         self.gfield -= self.sfield
 
-    def do_layout(self, rounds=1, node_size=40):
+    def do_layout(self, rounds=1, degree_2_plus_rounds=None, node_size=40):
         node_list = self.network.get_sorted_nodes()
-
+        # don't layout the degree 1 nodes for the first n rounds
+        if degree_2_plus_rounds == None or degree_2_plus_rounds > rounds:
+            degree_2_plus_rounds = rounds
         # perform the rounds of layout
         # start = timer()
         for n in range(0, rounds):
             logger.debug('round ' + str(n))
             for node in node_list:
-                # degree = node.get("degree")
-                # only layout the degree 1 nodes on the last
-                # round
-                # if degree > 1 or n >= (rounds-1):
-                self.layout_one_node(node)
+                degree = node.get("degree")
+                if degree == 1:
+                    if rounds > degree_2_plus_rounds:
+                        self.layout_one_node(node)
+                else:
+                    self.layout_one_node(node)
 
         # end = timer()
         # print("layout time = ", end - start)

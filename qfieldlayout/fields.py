@@ -114,7 +114,7 @@ def repulsion_field(radius, scale, datatype=np.int16, center_spike=False):
     dimension = (2 * radius) + 1
     ef = np.zeros((dimension, dimension), dtype=datatype)
     energy = int(scale * radius)
-    center_energy = 1000 if center_spike is True else energy
+    center_energy = 2000 if center_spike is True else energy
     for x in range(0, dimension):
         dx = abs(radius - x)
         for y in range(0, dimension):
@@ -123,3 +123,10 @@ def repulsion_field(radius, scale, datatype=np.int16, center_spike=False):
             # energy = 1000 if distance == 0 else int(scale * (abs(distance - radius)**2))
             ef[x, y] = center_energy if distance == 0 else int(energy / distance ** 2) + int(0.1 * (energy / distance))
     return ef
+
+def remove_spikes(field, max=1000):
+    for x in range(0, field.shape[0]):
+        for y in range(0, field.shape[1]):
+            if field[x,y] >= max:
+                field[x,y] = 0
+
