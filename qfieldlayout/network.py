@@ -24,11 +24,11 @@ class QFNetwork:
             if logger.isEnabledFor(logging.DEBUG):
                 logger.debug(str(edge[0]) + ' ' + str(edge[1]))
             if edge[0] not in self.node_dict:
-                self.node_dict[edge[0]] = {"adj": set()}
+                self.node_dict[edge[0]] = {"adj": set(), "energy": {}}
             self.node_dict[edge[0]]["adj"].add(edge[1])
             self.node_dict[edge[0]]["degree"] = len(self.node_dict[edge[0]]["adj"])
             if edge[1] not in self.node_dict:
-                self.node_dict[edge[1]] = {"adj": set()}
+                self.node_dict[edge[1]] = {"adj": set(), "energy": {}}
             self.node_dict[edge[1]]["adj"].add(edge[0])
             self.node_dict[edge[1]]["degree"] = len(self.node_dict[edge[1]]["adj"])
 
