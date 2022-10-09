@@ -4,6 +4,7 @@ import logging
 
 logger = logging.getLogger(__name__)
 
+
 # Adding fields:
 # The two fields are combined at an x-y offset, destructively modifying the target field
 # It is necessary to crop the added field to fit within the target field
@@ -80,6 +81,7 @@ def add_field(source_field, target_field, x, y, remove=False, show_node_dict=Fal
 def subtract_field(source_field, target_field, x, y, show_node_dict=False):
     add_field(source_field, target_field, x, y, remove=True, show_node_dict=show_node_dict)
 
+
 def attraction_field(radius, scale, datatype=np.int16, direction=None):
     dimension = (2 * radius) + 1
     ef = np.zeros((dimension, dimension), dtype=datatype)
@@ -107,8 +109,9 @@ def attraction_field(radius, scale, datatype=np.int16, direction=None):
             x_start = radius + 1
         for x in range(x_start, x_end):
             for y in range(y_start, y_end):
-                ef[x,y] = 0
+                ef[x, y] = 0
     return ef
+
 
 def repulsion_field(radius, scale, datatype=np.int16, center_spike=False):
     dimension = (2 * radius) + 1
@@ -124,9 +127,9 @@ def repulsion_field(radius, scale, datatype=np.int16, center_spike=False):
             ef[x, y] = center_energy if distance == 0 else int(energy / distance ** 2) + int(0.1 * (energy / distance))
     return ef
 
+
 def remove_spikes(field, max=1000):
     for x in range(0, field.shape[0]):
         for y in range(0, field.shape[1]):
-            if field[x,y] >= max:
-                field[x,y] = 0
-
+            if field[x, y] >= max:
+                field[x, y] = 0
