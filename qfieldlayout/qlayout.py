@@ -4,8 +4,7 @@ import numpy as np
 from qfieldlayout.qnetwork import adjacency_network_from_edge_array, get_sorted_node_list, get_cx_layout
 from math import sqrt, log
 from qfieldlayout.fields import repulsion_field, attraction_field, add_field, subtract_field
-from qfieldlayout.qfigures import save_field_cross_section_plot, save_convergence_graph, save_field_heatmap
-
+from time import time
 import logging
 
 logger = logging.getLogger(__name__)
@@ -13,9 +12,7 @@ logger = logging.getLogger(__name__)
 
 class QLayout:
     def __init__(self, edge_array, sparsity=30, r_radius=10,
-                 a_radius=10, r_scale=10, a_scale=10, a_base=3, center_attractor_scale=0.01, datatype=np.int16,
-                 make_figures=False):
-        self.make_figures = make_figures
+                 a_radius=10, r_scale=10, a_scale=10, a_base=3, center_attractor_scale=0.01, datatype=np.int16):
         self.edge_array = edge_array
         self.network = adjacency_network_from_edge_array(edge_array)
         self.integer_type = datatype
@@ -23,6 +20,10 @@ class QLayout:
         self.a_scale = a_scale
         self.a_base = a_base
         self.a_fields = {}
+        self.init_time = 0
+        self.layout_time = 0
+        self.total_time = 0
+        start = time()
         self.network = adjacency_network_from_edge_array(edge_array)
         # cache a scaled a_field for each node degree found in the network
         for node in self.network.values():
@@ -35,9 +36,7 @@ class QLayout:
         self.g_field, center = self._make_g_field(sparsity, center_attractor_scale)
         self.x_field = np.zeros(self.g_field.shape, self.integer_type)
         self.r_field = repulsion_field(r_radius, r_scale, self.integer_type, center_spike=True)
-
-        if self.make_figures is True:
-            save_field_cross_section_plot(self.r_field, filename="r_field_x_section")
+        self.init_time = time() - start
 
     def _make_g_field(self, sparsity, center_attractor_scale):
         node_count = len(self.network.values())
@@ -54,10 +53,10 @@ class QLayout:
                   center, center)
         return gf, center
 
-    def do_layout(self, layout_steps=1, convergence_threshold=None):
+    def do_layout(self, layout_steps=50, convergence_threshold=None):
         node_list = get_sorted_node_list(self.network)
         # perform the rounds of layout
-        # start = timer()
+        start = time()
         for step in range(0, layout_steps):
             logger.debug('step ' + str(step))
             for node in node_list:
@@ -66,10 +65,9 @@ class QLayout:
                 convergence_score = self.compute_convergence_score(step)
                 self.convergence_history.append(convergence_score)
                 if convergence_threshold is not None and convergence_score < convergence_threshold:
-                    break
-        if self.make_figures is True:
-            save_convergence_graph([self.convergence_history], filename="temp_convergence")
-            save_field_heatmap(self.g_field, filename="final_g_field")
+                    self.layout_time = time() - start
+                    self.total_time = self.layout_time + self.init_time
+                    return
 
     def update_node_position(self, node, layout_step):
         # remove the node's repulsion field unless this is the first time it has been placed

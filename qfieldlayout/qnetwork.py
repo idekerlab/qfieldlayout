@@ -33,7 +33,7 @@ def get_sorted_node_list(adjacency_network):
     return sorted(adjacency_network.values(), key=itemgetter('degree'))
 
 
-def edge_array_from_nicecx(cls, nicecx):
+def edge_array_from_nicecx(nicecx):
     edge_array = np.zeros((len(nicecx.get_edges()), 2), dtype=int)
     logger.debug("edge array: " + str(edge_array.shape))
     i = 0
