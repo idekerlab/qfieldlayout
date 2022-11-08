@@ -34,7 +34,6 @@ class QLayout:
                                                                  self.integer_type)
         self.convergence_history = []
         self.g_field, center = self._make_g_field(sparsity, center_attractor_scale)
-        self.x_field = np.zeros(self.g_field.shape, self.integer_type)
         self.r_field = repulsion_field(r_radius, r_scale, self.integer_type, center_spike=True)
         self.init_time = time() - start
 
@@ -68,6 +67,9 @@ class QLayout:
                     self.layout_time = time() - start
                     self.total_time = self.layout_time + self.init_time
                     return
+        self.layout_time = time() - start
+        self.total_time = self.layout_time + self.init_time
+        return
 
     def update_node_position(self, node, layout_step):
         # remove the node's repulsion field unless this is the first time it has been placed
@@ -81,9 +83,6 @@ class QLayout:
         # degree 1 nodes strongly 'want' to be next to their neighbor.
         # Vice versa, neighbors of a degree 20 node are each modeled as a 1/20 afield.
 
-        # clear the "scratchpad" x_field - an optimization to reduce the number of matrix additions
-        self.x_field[...] = 0
-
         # get an afield based on the node's degree
         degree = node["degree"]
         af = self.a_fields[degree]
@@ -93,16 +92,13 @@ class QLayout:
             adj_node = self.network[adj_node_id]
             # add the adjacent node's afield unless it does not yet have a position
             if adj_node.get("x") is not None and adj_node.get("y") is not None:
-                add_field(af, self.x_field, adj_node["x"], adj_node["y"])
-
-        # add neighbor attraction in the sfield to the gfield
-        self.g_field += self.x_field
+                add_field(af, self.g_field, adj_node["x"], adj_node["y"])
 
         # The destination is a location with the minimum value.
         # argmin returns the index of the first location containing
         # the minimum value in a flattened version of the array.
         # unravel_index turns the index back into the coordinates.
-        destination = np.unravel_index(np.argmin(self.g_field, axis=None), self.x_field.shape)
+        destination = np.unravel_index(np.argmin(self.g_field, axis=None), self.g_field.shape)
         node["x"] = destination[0]
         node["y"] = destination[1]
 
@@ -112,15 +108,19 @@ class QLayout:
         # update the node's energy
         node["energy"][layout_step] = self.g_field[destination[0], destination[1]]
 
-        # subtract the sfield to revert the gfield to contain only the superposition of node rfields.
-        self.g_field -= self.x_field
+        # subtract the a_fields to revert the gfield to contain only the superposition of node rfields.
+        for adj_node_id in node['adj']:
+            adj_node = self.network[adj_node_id]
+            # add the adjacent node's afield unless it does not yet have a position
+            if adj_node.get("x") is not None and adj_node.get("y") is not None:
+                subtract_field(af, self.g_field, adj_node["x"], adj_node["y"])
 
     def compute_convergence_score(self, layout_step):
         node_list = get_sorted_node_list(self.network)
         sum_node_change = 0
         for node in node_list:
-            delta = abs(node["energy"][layout_step] - node["energy"][layout_step - 1])
-            node_change = delta / node["energy"][layout_step - 1]
+            delta = node["energy"][layout_step] - node["energy"][layout_step - 1]
+            node_change = abs(delta / node["energy"][layout_step - 1])
             sum_node_change += node_change
         return sum_node_change / len(node_list)
 

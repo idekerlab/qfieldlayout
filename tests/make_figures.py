@@ -55,7 +55,7 @@ layouts["VERY_LARGE"] = qlayout.QLayout(very_large_edges, sparsity=15,
                                     a_radius=20, a_scale=10, a_base=5,
                                     center_attractor_scale=5)
 
-very_large_result = layouts["VERY_LARGE"].do_layout(layout_steps=20, convergence_threshold=0.001)
+very_large_result = layouts["VERY_LARGE"].do_layout(layout_steps=10, convergence_threshold=0.001)
 print("time = " + str(layouts["VERY_LARGE"].layout_time))
 
 # Figure 1

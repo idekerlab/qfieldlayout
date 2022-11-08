@@ -28,6 +28,7 @@ def save_figure_2(g_field, filename="figure_2"):
 
 def save_figure_3(layouts, filename="figure_3"):
     #   rcParams['figure.figsize'] = 10, 6
+
     for name, layout in layouts.items():
         plt.plot(layout.convergence_history)
     plt.grid(True, color='k', linestyle=':')
