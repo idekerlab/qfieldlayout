@@ -15,8 +15,8 @@ cx = ndex2.create_nice_cx_from_file('bioplex_test_networks/' + network_name + '.
 edges = edge_array_from_nicecx(cx)
 
 
-def export_step_png(nicecx, step):
-    cx_image_to_file(nicecx, filename=os.path.join(test_evolution_dir, f'{nicecx.get_name()}_{str(step)}.png'))
+def export_step_png(nicecx, step_number):
+    cx_image_to_file(nicecx, filename=os.path.join(test_evolution_dir, f'{nicecx.get_name()}_{str(step_number)}.png'))
 
 
 layout = QLayout(edges,

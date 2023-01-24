@@ -12,7 +12,9 @@ logger = logging.getLogger(__name__)
 
 class QLayout:
     def __init__(self, edge_array, sparsity=30, r_radius=10,
-                 a_radius=10, r_scale=10, a_scale=10, a_base=3, center_attractor_scale=0.01, datatype=np.int16):
+                 a_radius=10, r_scale=10, a_scale=10, a_base=3,
+                 center_attractor_scale=0.01, datatype=np.int16,
+                 degree_mode=False):
         self.edge_array = edge_array
         self.network = adjacency_network_from_edge_array(edge_array)
         self.integer_type = datatype
@@ -23,17 +25,23 @@ class QLayout:
         self.init_time = 0
         self.layout_time = 0
         self.total_time = 0
+        self.degree_mode = degree_mode
         start = time()
         self.network = adjacency_network_from_edge_array(edge_array)
-        # cache a scaled a_field for each node degree found in the network
-        for node in self.network.values():
-            if self.a_fields.get(node["degree"]) is None and node["degree"] != 0:
-                # scale = (self.a_base * log(node["degree"])) + self.a_scale
-                scale = self.a_scale / log(node["degree"] + 1)
-                # scale = (self.a_scale / node["degree"]) + (self.a_scale / self.a_base)
-                self.a_fields[node["degree"]] = attraction_field_2(self.a_radius,
-                                                                 scale,
-                                                                 self.integer_type)
+
+        if self.degree_mode:
+            # cache a scaled a_field for each node degree found in the network
+            for node in self.network.values():
+                if self.a_fields.get(node["degree"]) is None and node["degree"] != 0:
+                    # scale = (self.a_base * log(node["degree"])) + self.a_scale
+                    scale = self.a_scale / log(node["degree"] + 1)
+                    # scale = (self.a_scale / node["degree"]) + (self.a_scale / self.a_base)
+                    self.a_fields[node["degree"]] = attraction_field_2(self.a_radius,
+                                                                     scale,
+                                                                     self.integer_type)
+        else:
+            self.a_fields[0] = attraction_field_2(self.a_radius, self.a_scale, self.integer_type)
+
         self.convergence_history = []
         self.g_field, center = self._make_g_field(sparsity, center_attractor_scale)
         self.r_field = repulsion_field(r_radius, r_scale, self.integer_type, center_spike=True)
@@ -71,8 +79,6 @@ class QLayout:
             convergence_score = self.compute_convergence_score(step)
             self.convergence_history.append(convergence_score)
             if convergence_threshold is not None and convergence_score < convergence_threshold:
-                self.layout_time = time() - self.start
-                self.total_time = self.layout_time + self.init_time
                 return
 
     def update_node_positions(self, step, node_list):
@@ -91,9 +97,12 @@ class QLayout:
         # degree 1 nodes strongly 'want' to be next to their neighbor.
         # Vice versa, neighbors of a degree 20 node are each modeled as a 1/20 afield.
 
-        # get an afield based on the node's degree
-        degree = node["degree"]
-        af = self.a_fields[degree]
+        if self.degree_mode is True:
+            # get an afield based on the node's degree
+            degree = node["degree"]
+            af = self.a_fields[degree]
+        else:
+            af = self.a_fields[0]
 
         # iterate over the adjacent nodes
         for adj_node_id in node['adj']:
