@@ -82,7 +82,7 @@ def subtract_field(source_field, target_field, x, y, show_node_dict=False):
     add_field(source_field, target_field, x, y, remove=True, show_node_dict=show_node_dict)
 
 
-def attraction_field(radius, scale, datatype=np.int16, direction=None):
+def attraction_field(radius, scale, datatype=np.int16):
     dimension = (2 * radius) + 1
     ef = np.zeros((dimension, dimension), dtype=datatype)
     energy = int(scale * radius)
@@ -93,29 +93,33 @@ def attraction_field(radius, scale, datatype=np.int16, direction=None):
             dy = abs(radius - y)
             distance = sqrt(dx ** 2 + dy ** 2)
             ef[x, y] = -1 * energy if distance == 0 else min(0, int((slope * distance) - energy))
-    if direction:
-        # set the "source" half of the field to zero. energy is only lower in the "target" half
-        x_start = 0
-        y_start = 0
-        x_end = dimension
-        y_end = dimension
-        if direction == "down":
-            y_end = radius + 1
-        elif direction == "up":
-            y_start = radius + 1
-        elif direction == "right":
-            x_end = radius + 1
-        elif direction == "left":
-            x_start = radius + 1
-        for x in range(x_start, x_end):
-            for y in range(y_start, y_end):
-                ef[x, y] = 0
+    return ef
+
+
+def attraction_field_2(radius, scale, datatype=np.int16, inner_fraction=0.25):
+    dimension = (2 * radius) + 1
+    ef = np.zeros((dimension, dimension), dtype=datatype)
+    energy = int(scale * radius)
+    inner_radius = radius * inner_fraction
+    slope = energy / radius
+    inner_slope = -(energy / inner_radius)
+    for x in range(0, dimension):
+        dx = abs(radius - x)
+        for y in range(0, dimension):
+            dy = abs(radius - y)
+            distance = sqrt(dx ** 2 + dy ** 2)
+            if distance == 0:
+                ef[x,y] = 0
+            elif distance < inner_radius:
+                ef[x, y] = min(0, int((inner_slope * distance)))
+            else:
+                ef[x, y] = min(0, int((slope * distance - inner_radius) - energy))
     return ef
 
 
 def repulsion_field(radius, scale, datatype=np.int16, center_spike=False):
     dimension = (2 * radius) + 1
-    ef = np.zeros((dimension, dimension), dtype=datatype)
+    ef = blank_field(radius, datatype)
     energy = int(scale * radius)
     center_energy = 2000 if center_spike is True else energy
     for x in range(0, dimension):
@@ -126,6 +130,11 @@ def repulsion_field(radius, scale, datatype=np.int16, center_spike=False):
             # energy = 1000 if distance == 0 else int(scale * (abs(distance - radius)**2))
             ef[x, y] = center_energy if distance == 0 else int(energy / distance ** 2) + int(0.1 * (energy / distance))
     return ef
+
+
+def blank_field(radius, datatype=np.int16):
+    dimension = (2 * radius) + 1
+    return np.zeros((dimension, dimension), dtype=datatype)
 
 
 def remove_spikes(field, max=1000):

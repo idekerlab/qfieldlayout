@@ -4,6 +4,7 @@ import numpy as np
 from operator import itemgetter
 from random import randint
 import logging
+import networkx as nx
 
 logger = logging.getLogger(__name__)
 
@@ -43,6 +44,11 @@ def edge_array_from_nicecx(nicecx):
         i += 1
     return edge_array
 
+def edge_list_from_nicecx(nicecx):
+    edge_list = []
+    for edge_id, edge in nicecx.get_edges():
+        edge_list.append((edge["s"],edge["t"]))
+    return edge_list
 
 def get_cx_layout(adjacency_network, node_size=40):
     cx_layout = []
@@ -53,6 +59,7 @@ def get_cx_layout(adjacency_network, node_size=40):
                    "y": int(node["y"] * node_size)}
         cx_layout.append(cx_node)
     return cx_layout
+
 
 
 

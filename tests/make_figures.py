@@ -21,7 +21,7 @@ print("time = " + str(layouts["TINY"].layout_time))
 #
 # Medium Graph
 print("medium ")
-medium_cx = create_nice_cx_from_file('TCR signaling in nave CD4 T cells.cx')
+medium_cx = create_nice_cx_from_file('misc_test_networks/TCR signaling in nave CD4 T cells.cx')
 medium_edges = edge_array_from_nicecx(medium_cx)
 
 layouts["MEDIUM"] = qlayout.QLayout(medium_edges, sparsity=15,
@@ -34,7 +34,7 @@ print("time = " + str(layouts["MEDIUM"].layout_time))
 
 # Large Graph
 print("large")
-large_cx = create_nice_cx_from_file('BioPlex 3 - HEK293T beta cell.cx')
+large_cx = create_nice_cx_from_file('misc_test_networks/BioPlex 3 - HEK293T beta cell.cx')
 large_edges = edge_array_from_nicecx(large_cx)
 
 layouts["LARGE"] = qlayout.QLayout(large_edges, sparsity=15,
@@ -47,7 +47,7 @@ print("time = " + str(layouts["LARGE"].layout_time))
 
 # Very Large Graph
 print("very large ")
-very_large_cx = create_nice_cx_from_file('BioPlex_3_HEK293T.cx')
+very_large_cx = create_nice_cx_from_file('misc_test_networks/BioPlex_3_HEK293T.cx')
 very_large_edges = edge_array_from_nicecx(very_large_cx)
 
 layouts["VERY_LARGE"] = qlayout.QLayout(very_large_edges, sparsity=15,

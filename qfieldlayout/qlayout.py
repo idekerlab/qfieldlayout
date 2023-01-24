@@ -3,7 +3,7 @@
 import numpy as np
 from qfieldlayout.qnetwork import adjacency_network_from_edge_array, get_sorted_node_list, get_cx_layout
 from math import sqrt, log
-from qfieldlayout.fields import repulsion_field, attraction_field, add_field, subtract_field
+from qfieldlayout.fields import repulsion_field, attraction_field, attraction_field_2, add_field, subtract_field
 from time import time
 import logging
 
@@ -27,10 +27,12 @@ class QLayout:
         self.network = adjacency_network_from_edge_array(edge_array)
         # cache a scaled a_field for each node degree found in the network
         for node in self.network.values():
-            if self.a_fields.get(node["degree"]) is None:
-                self.a_fields[node["degree"]] = attraction_field(self.a_radius,
-                                                                 self.a_scale / node[
-                                                                     "degree"] + self.a_scale / self.a_base,
+            if self.a_fields.get(node["degree"]) is None and node["degree"] != 0:
+                # scale = (self.a_base * log(node["degree"])) + self.a_scale
+                scale = self.a_scale / log(node["degree"] + 1)
+                # scale = (self.a_scale / node["degree"]) + (self.a_scale / self.a_base)
+                self.a_fields[node["degree"]] = attraction_field_2(self.a_radius,
+                                                                 scale,
                                                                  self.integer_type)
         self.convergence_history = []
         self.g_field, center = self._make_g_field(sparsity, center_attractor_scale)
@@ -57,19 +59,25 @@ class QLayout:
         # perform the rounds of layout
         start = time()
         for step in range(0, layout_steps):
-            logger.debug('step ' + str(step))
-            for node in node_list:
-                self.update_node_position(node, step)
-            if step > 0:
-                convergence_score = self.compute_convergence_score(step)
-                self.convergence_history.append(convergence_score)
-                if convergence_threshold is not None and convergence_score < convergence_threshold:
-                    self.layout_time = time() - start
-                    self.total_time = self.layout_time + self.init_time
-                    return
+            self.do_layout_step(step, node_list, convergence_threshold)
         self.layout_time = time() - start
         self.total_time = self.layout_time + self.init_time
         return
+
+    def do_layout_step(self, step, node_list, convergence_threshold):
+        logger.debug('step ' + str(step))
+        self.update_node_positions(step, node_list)
+        if step > 0:
+            convergence_score = self.compute_convergence_score(step)
+            self.convergence_history.append(convergence_score)
+            if convergence_threshold is not None and convergence_score < convergence_threshold:
+                self.layout_time = time() - self.start
+                self.total_time = self.layout_time + self.init_time
+                return
+
+    def update_node_positions(self, step, node_list):
+        for node in node_list:
+            self.update_node_position(node, step)
 
     def update_node_position(self, node, layout_step):
         # remove the node's repulsion field unless this is the first time it has been placed

@@ -2,23 +2,72 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 import networkx as nx
 from matplotlib import rcParams
-from qfieldlayout.fields import repulsion_field, attraction_field
+from qfieldlayout.fields import repulsion_field, attraction_field, blank_field, add_field, attraction_field_2
+import os
+import sys
+import json
+import time
+import requests
+import ndex2
+
+# REST_ENDPOINT = 'http://localhost:8081/cd/cd/v1'
+REST_ENDPOINT = 'http://cd.ndexbio.org/cd/communitydetection/v1'
+HEADERS = {'Content-Type': 'application/json',
+           'Accept': 'application/json'}
 
 
-def save_figure_2(g_field, filename="figure_2"):
-    fig1, (ax1, ax2) = plt.subplots(nrows=1, ncols=2)
+def cx_image_to_file(nice_cx, width='2048', height='2048', filename="cx_image_default"):
+    print('making request to run image export')
+    res = requests.post(REST_ENDPOINT,
+                        headers=HEADERS,
+                        json={'algorithm': 'cytojsimageexport',
+                              'customParameters': {'--width': width, '--height': height},
+                              'data': nice_cx.to_cx()},
+                        timeout=30)
+    if res.status_code != 202:
+        raise Exception('Error submitting image export task ' + str(res.status_code) + ' : ' + str(res.text))
+    task_id = res.json()['id']
+    print('Task id is: ' + str(task_id))
+
+    # need to make GET request with task id to check job status
+    res = requests.get(REST_ENDPOINT + '/raw/' + str(task_id))
+
+    if res.status_code == 200:
+        with open(filename, 'wb') as f:
+            for chunk in res.iter_content(1024):
+                f.write(chunk)
+        print('Output written to: ' + filename)
+    else:
+        print('Non 200 status code received: ' + str(res.status_code))
+
+
+def save_figure_2(r_radius=20, a_radius=20, r_scale=10, a_scale=10, filename="figure_2"):
+    fig1, (ax1, ax2, ax3) = plt.subplots(nrows=1, ncols=3)
     # repulsion
-    repulsion = repulsion_field(20, 10, center_spike=False)
-    center_x = int(repulsion.shape[0] / 2)
-    ax1.plot(repulsion[center_x])
-    ax2.set_xlabel('Energy')
-    ax2.set_ylabel('Distance')
+    repulsion = repulsion_field(r_radius, r_scale, center_spike=False)
+    center_repulsion = int(repulsion.shape[0] / 2)
+    ax1.plot(repulsion[center_repulsion])
+    ax1.set_xlabel('Distance')
+    ax1.set_ylabel('Energy')
+    ax1.set_title("r_field")
+
     # attraction
-    attraction = attraction_field(20, 10)
-    center_x = int(attraction.shape[0] / 2)
-    ax2.plot(attraction[center_x])
-    ax2.set_xlabel('Energy')
-    ax2.set_ylabel('Distance')
+    attraction = attraction_field_2(a_radius, a_scale)
+    center_attraction = int(attraction.shape[0] / 2)
+    ax2.plot(attraction[center_attraction])
+    ax1.set_xlabel('Distance')
+    ax1.set_ylabel('Energy')
+    ax2.set_title("a_field")
+
+    # combined
+    combined = blank_field(max(r_radius, a_radius))
+    center_combined = int(repulsion.shape[0] / 2)
+    add_field(repulsion, combined, center_combined, center_combined)
+    add_field(attraction, combined, center_combined, center_combined)
+    ax3.plot(combined[center_combined])
+    ax1.set_xlabel('Distance')
+    ax1.set_ylabel('Energy')
+    ax3.set_title("combined")
     # g_field
     # sns.heatmap(g_field)
     # save
