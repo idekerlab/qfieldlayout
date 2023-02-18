@@ -1,5 +1,5 @@
 import numpy as np
-from math import sqrt
+from math import sqrt, ceil, floor
 import logging
 
 logger = logging.getLogger(__name__)
@@ -82,10 +82,10 @@ def subtract_field(source_field, target_field, x, y, show_node_dict=False):
     add_field(source_field, target_field, x, y, remove=True, show_node_dict=show_node_dict)
 
 
-def attraction_field(radius, scale, datatype=np.int16):
+def attraction_field(radius, energy, datatype=np.int16):
     dimension = (2 * radius) + 1
     ef = np.zeros((dimension, dimension), dtype=datatype)
-    energy = int(scale * radius)
+    energy = int(energy)
     slope = energy / radius
     for x in range(0, dimension):
         dx = abs(radius - x)
@@ -96,10 +96,9 @@ def attraction_field(radius, scale, datatype=np.int16):
     return ef
 
 
-def attraction_field_2(radius, scale, datatype=np.int16, inner_fraction=0.25):
+def attraction_field_2(radius, energy, datatype=np.int16, inner_fraction=0.25):
     dimension = (2 * radius) + 1
     ef = np.zeros((dimension, dimension), dtype=datatype)
-    energy = int(scale * radius)
     inner_radius = radius * inner_fraction
     slope = energy / radius
     inner_slope = -(energy / inner_radius)
@@ -117,18 +116,16 @@ def attraction_field_2(radius, scale, datatype=np.int16, inner_fraction=0.25):
     return ef
 
 
-def repulsion_field(radius, scale, datatype=np.int16, center_spike=False):
+def repulsion_field(radius, energy, datatype=np.int16, center_spike=False):
     dimension = (2 * radius) + 1
     ef = blank_field(radius, datatype)
-    energy = int(scale * radius)
     center_energy = 2000 if center_spike is True else energy
     for x in range(0, dimension):
         dx = abs(radius - x)
         for y in range(0, dimension):
             dy = abs(radius - y)
             distance = sqrt(dx ** 2 + dy ** 2)
-            # energy = 1000 if distance == 0 else int(scale * (abs(distance - radius)**2))
-            ef[x, y] = center_energy if distance == 0 else int(energy / distance ** 2) + int(0.1 * (energy / distance))
+            ef[x, y] = center_energy if distance == 0 else min(center_energy, int(energy / distance ** 2) ) #+ int(0.1 * (energy / distance)))
     return ef
 
 

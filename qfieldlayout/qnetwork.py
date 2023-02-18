@@ -11,27 +11,42 @@ logger = logging.getLogger(__name__)
 
 def adjacency_network_from_edge_array(edge_array):
     adjacency_network = {}
-    node_id = 0
     for edge in edge_array:
         if logger.isEnabledFor(logging.DEBUG):
             logger.debug(str(edge[0]) + ' ' + str(edge[1]))
 
         if edge[0] not in adjacency_network:
-            adjacency_network[edge[0]] = {"adj": set(), "energy": {}, "degree": 1, "id": node_id}
-            node_id += 1
+            adjacency_network[edge[0]] = {"adj": set(), "energy": {}, "degree": 1, "id": edge[0]}
         adjacency_network[edge[0]]["adj"].add(edge[1])
         adjacency_network[edge[0]]["degree"] = len(adjacency_network[edge[0]]["adj"])
 
         if edge[1] not in adjacency_network:
-            adjacency_network[edge[1]] = {"adj": set(), "energy": {}, "degree": 1, "id": node_id}
-            node_id += 1
+            adjacency_network[edge[1]] = {"adj": set(), "energy": {}, "degree": 1, "id": edge[1]}
         adjacency_network[edge[1]]["adj"].add(edge[0])
         adjacency_network[edge[1]]["degree"] = len(adjacency_network[edge[1]]["adj"])
     return adjacency_network
 
 
 def get_sorted_node_list(adjacency_network):
-    return sorted(adjacency_network.values(), key=itemgetter('degree'))
+    return sorted(adjacency_network.values(), key=itemgetter('degree'), reverse=True)
+
+
+def get_sorted_node_list_2(adjacency_network):
+    degree_sorted = sorted(adjacency_network.values(), key=itemgetter('degree'), reverse=True)
+    done = set()
+    new_sort = []
+    for node in degree_sorted:
+        if node["id"] not in done:
+            new_sort.append(node)
+            done.add(node["id"])
+        for adj_node_id in node['adj']:
+            adj_node = adjacency_network[adj_node_id]
+            if adj_node["id"] not in done:
+                new_sort.append(adj_node)
+                done.add(adj_node["id"])
+    if len(degree_sorted) != len(new_sort):
+        raise NameError("error - the re-sorted node list is not the same length")
+    return new_sort
 
 
 def edge_array_from_nicecx(nicecx):

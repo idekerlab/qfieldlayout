@@ -1,4 +1,6 @@
 import matplotlib.pyplot as plt
+from matplotlib import cm
+from matplotlib.ticker import LinearLocator
 import seaborn as sns
 import networkx as nx
 from matplotlib import rcParams
@@ -9,6 +11,7 @@ import json
 import time
 import requests
 import ndex2
+import numpy as np
 
 # REST_ENDPOINT = 'http://localhost:8081/cd/cd/v1'
 REST_ENDPOINT = 'http://cd.ndexbio.org/cd/communitydetection/v1'
@@ -41,7 +44,7 @@ def cx_image_to_file(nice_cx, width='2048', height='2048', filename="cx_image_de
         print('Non 200 status code received: ' + str(res.status_code))
 
 
-def save_figure_2(r_radius=20, a_radius=20, r_scale=10, a_scale=10, filename="figure_2"):
+def save_field_figure(r_radius=20, a_radius=20, r_scale=10, a_scale=10, filename="figure_2"):
     fig1, (ax1, ax2, ax3) = plt.subplots(nrows=1, ncols=3)
     # repulsion
     repulsion = repulsion_field(r_radius, r_scale, center_spike=False)
@@ -75,7 +78,55 @@ def save_figure_2(r_radius=20, a_radius=20, r_scale=10, a_scale=10, filename="fi
     plt.clf()
 
 
-def save_figure_3(layouts, filename="figure_3"):
+def array_to_coordinate_values(array):
+    length = array.shape[0] * array.shape[1]
+
+    Z  = np.zeros(length)
+    for x in range(array.shape[0]):
+        for y in range(array.shape[1]):
+            X[x+y] = x
+            Y[x+y] = y
+            Z[x+y] = array[x,y]
+    X, Y = np.meshgrid(X, Y)
+    return X, Y, Z
+
+
+def save_field_figure_3d(r_radius=20, a_radius=20, r_scale=10, a_scale=10, filename="fields_3d"):
+    fig, ax = plt.subplots(subplot_kw={"projection": "3d"})
+    repulsion = repulsion_field(r_radius, r_scale, center_spike=False)
+    attraction = attraction_field_2(a_radius, a_scale)
+    y_size = 2 * max((r_radius, a_radius)) + 1
+    g_field = np.zeros((2*y_size, y_size))
+    y_center = max(r_radius, a_radius) + 1
+    add_field(repulsion, g_field, y_center, y_center)
+    add_field(repulsion, g_field, y_center + y_size, y_center)
+    add_field(attraction, g_field, y_center + y_size, y_center)
+    X = np.arange(0, g_field.shape[1])
+    Y = np.arange(0, g_field.shape[0])
+    X, Y = np.meshgrid(X, Y)
+
+    print(X.shape)
+    print(Y.shape)
+    # Plot the surface.
+    surf = ax.plot_surface(X, Y, g_field, cmap=cm.coolwarm,
+                           linewidth=0, antialiased=True)
+
+    # Customize the z axis.
+    # ax.set_zlim(-1.01, 1.01)
+    # ax.zaxis.set_major_locator(LinearLocator(10))
+    # A StrMethodFormatter is used automatically
+    # ax.zaxis.set_major_formatter('{x:.02f}')
+
+    # Add a color bar which maps values to colors.
+    fig.colorbar(surf, shrink=0.5, aspect=10)
+
+    ax.set_box_aspect((X.shape[1], X.shape[0], 50))  # xy aspect ratio is 1:1, but stretches z axis
+
+    plt.savefig(filename, dpi=300)
+    plt.clf()
+
+
+def save_layout_convergence_figure(layouts, filename="figure_3"):
     #   rcParams['figure.figsize'] = 10, 6
 
     for name, layout in layouts.items():
@@ -89,7 +140,7 @@ def save_figure_3(layouts, filename="figure_3"):
     plt.clf()
 
 
-def save_figure_4(layouts, filename="figure_4"):
+def save_layout_time_figure(layouts, filename="figure_4"):
     #   rcParams['figure.figsize'] = 10, 6
     layout_times = []
     layout_edge_counts = []

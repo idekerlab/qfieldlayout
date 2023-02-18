@@ -1,7 +1,8 @@
 # the layout described in the paper
 
 import numpy as np
-from qfieldlayout.qnetwork import adjacency_network_from_edge_array, get_sorted_node_list, get_cx_layout
+from qfieldlayout.qnetwork import adjacency_network_from_edge_array, get_sorted_node_list, get_cx_layout, \
+    get_sorted_node_list_2
 from math import sqrt, log
 from qfieldlayout.fields import repulsion_field, attraction_field, attraction_field_2, add_field, subtract_field
 from time import time
@@ -34,11 +35,12 @@ class QLayout:
             for node in self.network.values():
                 if self.a_fields.get(node["degree"]) is None and node["degree"] != 0:
                     # scale = (self.a_base * log(node["degree"])) + self.a_scale
-                    scale = self.a_scale / log(node["degree"] + 1)
+                    # scale = self.a_scale / log(node["degree"] + 1)
+                    scale = self.a_scale / max(1, node["degree"])
                     # scale = (self.a_scale / node["degree"]) + (self.a_scale / self.a_base)
                     self.a_fields[node["degree"]] = attraction_field_2(self.a_radius,
-                                                                     scale,
-                                                                     self.integer_type)
+                                                                       scale,
+                                                                       self.integer_type)
         else:
             self.a_fields[0] = attraction_field_2(self.a_radius, self.a_scale, self.integer_type)
 
@@ -63,7 +65,7 @@ class QLayout:
         return gf, center
 
     def do_layout(self, layout_steps=50, convergence_threshold=None):
-        node_list = get_sorted_node_list(self.network)
+        node_list = get_sorted_node_list_2(self.network)
         # perform the rounds of layout
         start = time()
         for step in range(0, layout_steps):
