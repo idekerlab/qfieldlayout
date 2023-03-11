@@ -2,10 +2,9 @@
 
 """Tests for `qfieldlayout` package."""
 
-
 import unittest
 
-from qfieldlayout import layout
+from qfieldlayout.fields import attraction_field_2, repulsion_field
 import matplotlib.pyplot as plt
 import seaborn as sns
 
@@ -22,6 +21,7 @@ def save_heatmap(field, filename="temp_heatmap"):
     plt.savefig(filename)
     plt.clf()
 
+
 class TestQfieldlayout(unittest.TestCase):
     """Tests for `qfieldlayout` package."""
 
@@ -32,9 +32,7 @@ class TestQfieldlayout(unittest.TestCase):
         """Tear down test fixtures, if any."""
 
     def test_000_something(self):
-        save_plot(layout.repulsion_field(10, scale=10), "test_repulsion_plot.png")
-        save_heatmap(layout.repulsion_field(10, scale=10), "test_repulsion_heatmap.png")
-        save_plot(layout.attraction_field(10, scale=5), "test_attraction_plot.png")
-        save_heatmap(layout.attraction_field(10, scale=5), "test_attraction_heatmap.png")
-
-
+        save_plot(repulsion_field(10, scale=10), "test_repulsion_plot.png")
+        save_heatmap(repulsion_field(10, scale=10), "test_repulsion_heatmap.png")
+        save_plot(attraction_field_2(10, scale=5), "test_attraction_plot.png")
+        save_heatmap(attraction_field_2(10, scale=5), "test_attraction_heatmap.png")
