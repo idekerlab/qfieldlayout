@@ -69,7 +69,8 @@ class QLayout:
         # perform the rounds of layout
         start = time()
         for step in range(0, layout_steps):
-            self.do_layout_step(step, node_list, convergence_threshold)
+            if self.do_layout_step(step, node_list, convergence_threshold) is True:
+                break
         self.layout_time = time() - start
         self.total_time = self.layout_time + self.init_time
         return
@@ -81,7 +82,8 @@ class QLayout:
             convergence_score = self.compute_convergence_score(step)
             self.convergence_history.append(convergence_score)
             if convergence_threshold is not None and convergence_score < convergence_threshold:
-                return
+                return True
+        return False
 
     def update_node_positions(self, step, node_list):
         for node in node_list:

@@ -1,0 +1,27 @@
+digraph {
+	Start [label=Start]
+	"Create Layout Object" [label="Instantiate a Layout object based on an input network in one of several formats"]
+	"Create Adjacency List" [label="Create the Layout’s adjacency list dictionary from the network edge list"]
+	"Initialize Fields" [label="Create NumPy arrays for the f-field, r-field, and a-field. Initialize each field only once."]
+	"Create Repulsion Field" [label="Create r-field with its dimensions set to 2R + 1. Set energy at each position inversely proportional to the square of the distance from the center"]
+	"Create Attraction Field" [label="Create a-field with its dimensions set to 2R + 1. Set energy values to simulate an attraction"]
+	"Sort Nodes" [label="Sort node list such that high degree nodes and their neighbors are placed first"]
+	"Do Layout" [label="Iterate until maximum number of iterations is reached or convergence score is less than specified threshold"]
+	"Output Results" [label="Output the node coordinates in desired format"]
+	"Node Update" [label="Update node position based on energy values and convergence score"]
+	"Calculate Convergence Score" [label="Calculate convergence score after each iteration"]
+	End [label=End]
+	Start -> "Create Layout Object"
+	"Create Layout Object" -> "Create Adjacency List"
+	"Create Layout Object" -> "Initialize Fields"
+	"Initialize Fields" -> "Create Repulsion Field"
+	"Initialize Fields" -> "Create Attraction Field"
+	"Create Adjacency List" -> "Sort Nodes"
+	"Sort Nodes" -> "Do Layout"
+	"Do Layout" -> "Node Update"
+	"Node Update" -> "Calculate Convergence Score"
+	"Calculate Convergence Score" -> "Do Layout" [constraint=false]
+	"Do Layout" -> "Output Results"
+	"Output Results" -> End
+	rankdir=LR
+}
