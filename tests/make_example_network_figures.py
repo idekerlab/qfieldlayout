@@ -1,9 +1,15 @@
-from qfieldlayout.qfigures import make_example_network_images
-'''
-make_example_network_images(network_names=["qfield_test_41_93.cx",
-                                              "qfield_test_618_1824.cx",
-                                              "qfield_test_3K_12K.cx",
-                                              #"qfield_test_14K_130K.cx"
-                                           ])
-'''
-make_example_network_images(input_network_folder='image_networks')
+from qfieldlayout.qfigures import make_example_network_images, \
+    get_example_networks, \
+    cx_image_to_file, layout_nice_cx_networks, save_cx_networks_with_layouts
+
+nice_cx_networks = get_example_networks("example_networks")
+
+# layout the networks
+layouts = layout_nice_cx_networks(nice_cx_networks, sparsity=25)
+
+# write them out with their layouts
+save_cx_networks_with_layouts(layouts, "example_networks_with_layouts", scale=35)
+
+# generate the images
+for nice_cx in nice_cx_networks:
+    cx_image_to_file(nice_cx, filename=f'example_network_images/{nice_cx.get_name()}.png')

@@ -117,14 +117,14 @@ def get_test_networks(input_network_folder):
     return nice_cx_networks
 
 
-def layout_nice_cx_networks(nice_cx_networks, degree_mode=False):
+def layout_nice_cx_networks(nice_cx_networks, degree_mode=False, sparsity=20):
     layouts = []
     for nice_cx_network in nice_cx_networks:
         edge_array = edge_array_from_nicecx(nice_cx_network)
-        layout = QLayout(edge_array, sparsity=15, r_radius=20, r_scale=15, a_radius=10, a_scale=15,
+        layout = QLayout(edge_array, sparsity=sparsity, r_radius=20, r_scale=15, a_radius=10, a_scale=15,
                          center_attractor_scale=4, degree_mode=degree_mode)
         layout.do_layout(convergence_threshold=0.0001)
-        print(nice_cx_network.get_name())
+        print(f'layout: {nice_cx_network.get_name()}')
         layouts.append([layout, nice_cx_network])
     return layouts
 
@@ -471,7 +471,7 @@ def make_example_network_images(input_network_folder="test_networks_with_layouts
         cx_image_to_file(nice_cx, filename=filename)
 
 
-def get_example_networks(input_network_folder, network_names):
+def get_example_networks(input_network_folder, network_names=None):
     nice_cx_networks = []
     for filename in os.listdir(input_network_folder):
         if network_names is None or filename in network_names:

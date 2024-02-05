@@ -15,7 +15,7 @@ UPLOAD = True
 PLOT = False
 
 network, edges = qtests.get_network("qfield_test_96_133.cx", subdir="bioplex_test_networks")
-# network, edges = get_network("TCR signaling in nave CD4 T cells.cx", subdir="misc_test_networks")
+# network, edges = get_network("small_no_degree_zero_example.cx", subdir="example_networks")
 layout = qlayout.QLayout(edges,
                          sparsity=10,
                          r_radius=10, r_scale=10,
